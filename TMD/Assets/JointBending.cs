@@ -6,14 +6,14 @@ using UnityEngine;
 public class JointBending : MonoBehaviour
 {
     [Header("Base Shape")]
-    public float width = 1f;
-    public float height = 5f;
+    public double width = 1;
+    public double height = 5;
     [Range(1, 40)]
     public int verticalSegments = 10; // more segments = smoother bend
 
     [Header("Bend Control")]
     [Tooltip("How far (in world units) the TOP of the building is pushed sideways.")]
-    public float bendAmount = 0f;
+    public double bendAmount = 0;
 
     Mesh _mesh;
     Vector3[] _baseVertices;
@@ -51,23 +51,23 @@ public class JointBending : MonoBehaviour
         Vector2[] uvs = new Vector2[vertexCount];
         int[] triangles = new int[verticalSegments * 6];
 
-        float halfWidth = width * 0.5f;
+        double halfWidth = width * 0.5d;
 
         for (int i = 0; i <= verticalSegments; i++)
         {
-            float t = (float)i / verticalSegments;   // 0..1 up the height
-            float y = t * height;
+            double t = (double)i / verticalSegments;   // 0..1 up the height
+            double y = t * height;
 
 
-            float xLeft = -halfWidth;
-            float xRight = halfWidth;
+            double xLeft = -halfWidth;
+            double xRight = halfWidth;
 
             int baseIndex = i * vertsPerColumn;
-            vertices[baseIndex + 0] = new Vector3(xLeft, y, 0f);  // left
-            vertices[baseIndex + 1] = new Vector3(xRight, y, 0f); // right
+            vertices[baseIndex + 0] = new Vector3((float)xLeft, (float)y, 0);  // left
+            vertices[baseIndex + 1] = new Vector3((float)xRight, (float)y, 0); // right
 
-            uvs[baseIndex + 0] = new Vector2(0f, t);
-            uvs[baseIndex + 1] = new Vector2(1f, t);
+            uvs[baseIndex + 0] = new Vector2(0f, (float)t);
+            uvs[baseIndex + 1] = new Vector2(1f, (float)t);
         }
 
         int ti = 0;
@@ -106,8 +106,8 @@ public class JointBending : MonoBehaviour
 
         Vector3[] deformed = new Vector3[_baseVertices.Length];
 
-        float dir = Mathf.Sign(bendAmount);
-        float target = Mathf.Abs(bendAmount);
+        double dir = Mathf.Sign((float)bendAmount);
+        double target = Mathf.Abs((float)bendAmount);
 
         // If no bend: keep original
         if (target < 0.00001f)
@@ -120,21 +120,21 @@ public class JointBending : MonoBehaviour
             return;
         }
 
-        float R = SolveRadius(height, target);
-        float halfWidth = width * 0.5f;
+        double R = SolveRadius(height, target);
+        double halfWidth = width * 0.5f;
 
         for (int i = 0; i < _baseVertices.Length; i++)
         {
             Vector3 baseV = _baseVertices[i];
 
             // 0..1 up the building
-            float t = Mathf.Clamp01(baseV.y / height);
-            float s = t * height;
-            float angle = s / R;
-            float xCenter = dir * (R - R * Mathf.Cos(angle)); 
-            float yCenter = R * Mathf.Sin(angle);
+            double t = Mathf.Clamp01((float)(baseV.y / height));
+            double s = t * height;
+            double angle = s / R;
+            double xCenter = dir * (R - R * Mathf.Cos((float)angle)); 
+            double yCenter = R * Mathf.Sin((float)angle);
 
-            Vector2 tangent = new Vector2(dir * Mathf.Sin(angle), Mathf.Cos(angle));
+            Vector2 tangent = new Vector2((float)(dir * Mathf.Sin((float)angle)), Mathf.Cos((float)angle));
             Vector2 normal;
             if (dir >= 0f)
             {
@@ -148,13 +148,13 @@ public class JointBending : MonoBehaviour
             }
             normal.Normalize();
 
-            float normalizedX = (halfWidth > 0f) ? (baseV.x / halfWidth) : 0f;
-            normalizedX = Mathf.Clamp(normalizedX, -1f, 1f);
+            double normalizedX = (halfWidth > 0f) ? (baseV.x / halfWidth) : 0f;
+            normalizedX = Mathf.Clamp((float)normalizedX, -1f, 1f);
 
-            float x = xCenter + normalizedX * halfWidth * normal.x;
-            float y = yCenter + normalizedX * halfWidth * normal.y;
+            double x = xCenter + normalizedX * halfWidth * normal.x;
+            double y = yCenter + normalizedX * halfWidth * normal.y;
 
-            deformed[i] = new Vector3(x, y, 0f);
+            deformed[i] = new Vector3((float)x, (float)y, 0f);
         }
 
 
@@ -164,27 +164,27 @@ public class JointBending : MonoBehaviour
 
 
 
-    float SolveRadius(float height, float targetOffset)
+    double SolveRadius(double height, double targetOffset)
     {
-        targetOffset = Mathf.Abs(targetOffset);
+        targetOffset = Mathf.Abs((float)targetOffset);
         if (targetOffset < 0.00001f)
             return Mathf.Infinity;
-        float R = (height * height) / (2f * targetOffset);
+        double R = (height * height) / (2f * targetOffset);
 
         for (int i = 0; i < 5; i++)
         {
-            float theta = height / R;
-            float cosT = Mathf.Cos(theta);
-            float sinT = Mathf.Sin(theta);
+            double theta = height / R;
+            double cosT = Mathf.Cos((float)theta);
+            double sinT = Mathf.Sin((float)theta);
 
-            float f = R * (1f - cosT) - targetOffset;
-            float df = 1f - cosT - theta * sinT;
+            double f = R * (1f - cosT) - targetOffset;
+            double df = 1f - cosT - theta * sinT;
 
-            if (Mathf.Abs(df) < 1e-6f) break;
+            if (Mathf.Abs((float)df) < 1e-6f) break;
             R -= f / df;
         }
 
-        return Mathf.Max(R, height * 0.25f);
+        return Mathf.Max((float)R, (float)height * 0.25f);
     }
 
 
