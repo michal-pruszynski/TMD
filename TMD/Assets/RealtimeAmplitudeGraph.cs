@@ -59,7 +59,7 @@ public class RealtimeAmplitudeHistoryGraph : MonoBehaviour
             float t = Time.time;          // seconds since start
             float value = Mathf.Sin(t);   // in [-1, 1]
 
-            AddSample(value);
+            //AddSample(value);
         }
     }
 
