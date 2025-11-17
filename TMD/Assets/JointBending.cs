@@ -33,10 +33,11 @@ public class JointBending : MonoBehaviour
 
     void Update()
     {
+        
         ApplyBend();
     }
 
-    void CreateMesh()
+    public void CreateMesh()
     {
         if (_mesh == null)
         {

@@ -31,6 +31,7 @@ public class SimulationLord : MonoBehaviour
 
 	//OUTPUTS
 	public TextMeshProUGUI massValue;
+	public TextMeshProUGUI ampValue;
     public JointBending building;
     public double scale = 10;
     public RealtimeAmplitudeHistoryGraph graph;
@@ -58,7 +59,6 @@ public class SimulationLord : MonoBehaviour
 
 		//CALCULATE MASS
 		mass = a * a * h * 400;
-        mass *= 0.5;
         massValue.text = (mass/1000).ToString("N0", spaceCulture) +"t";
 
 
@@ -67,12 +67,12 @@ public class SimulationLord : MonoBehaviour
         //UBER EQUATION FOR AMPLITUDE
         double w0, wn, wd, T, m, g;
         double Amplitude;
-        m = mass;
+        m = mass/2;
         g = 9.81;
         wd = Math.Sqrt(g / l);
         T = 0.085 * Math.Pow(h, 0.75);
         wn = (2*Math.PI)/ T;
-        w0 = 2 * Math.PI * 3;//0.12 * (v / a);
+        w0 = 2 * Math.PI * 0.3;//0.12 * (v / a);
 
 
         double rd, rn, k, f0;
@@ -82,16 +82,18 @@ public class SimulationLord : MonoBehaviour
         k = (4 * Math.PI * Math.PI * m) / (T * T);
         f0 = (1.25 * ((v * v) / 2) * 1.3 * a * h);
 
-        md = 0.0001;
+        //md = 0.0001;
 
 
         double denom = (1 - (rn * rn)) * (1 - (rd * rd)) - ((md / m) * rn * rn);
 
 
 
-        Amplitude = (f0 / k) * (((1 - (rd * rd)) / denom));
+        Amplitude = (f0 / k) * Math.Abs(((1 - (rd * rd)) / denom));
+        
 		
-		Debug.Log(Amplitude);
+		///Debug.Log(Amplitude);
+        ampValue.text = Math.Abs(Amplitude).ToString("N5", spaceCulture)+"m";
 
         double x = Math.Abs(Amplitude) * Math.Sin(wn * t);
 
