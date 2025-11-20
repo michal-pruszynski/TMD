@@ -32,6 +32,13 @@ public class SimulationLord : MonoBehaviour
 	//OUTPUTS
 	public TextMeshProUGUI massValue;
 	public TextMeshProUGUI ampValue;
+	public TextMeshProUGUI wnValue;
+	public TextMeshProUGUI wdValue;
+    public pendulum tmd;
+
+
+
+
     public JointBending building;
     public double scale = 10;
     public RealtimeAmplitudeHistoryGraph graph;
@@ -58,10 +65,10 @@ public class SimulationLord : MonoBehaviour
 		building.height = (float)(h / scale);
 
 		//CALCULATE MASS
-		mass = a * a * h * 400;
+		mass = a * a * h * 7500 * 0.05;
         massValue.text = (mass/1000).ToString("N0", spaceCulture) +"t";
 
-
+        tmd.setLenghts((float)(l / scale), 1);
 
 
         //UBER EQUATION FOR AMPLITUDE
@@ -72,7 +79,7 @@ public class SimulationLord : MonoBehaviour
         wd = Math.Sqrt(g / l);
         T = 0.085 * Math.Pow(h, 0.75);
         wn = (2*Math.PI)/ T;
-        w0 = 2 * Math.PI * 0.3;//0.12 * (v / a);
+        w0 = wn;// 2 * Math.PI * 0.3;//0.12 * (v / a);
 
 
         double rd, rn, k, f0;
@@ -94,6 +101,8 @@ public class SimulationLord : MonoBehaviour
 		
 		///Debug.Log(Amplitude);
         ampValue.text = Math.Abs(Amplitude).ToString("N5", spaceCulture)+"m";
+        wnValue.text = Math.Abs(wn).ToString("N3", spaceCulture)+"rad";
+        wdValue.text = Math.Abs(wd).ToString("N3", spaceCulture)+"rad";
 
         double x = Math.Abs(Amplitude) * Math.Sin(wn * t);
 
@@ -109,6 +118,16 @@ public class SimulationLord : MonoBehaviour
 			x = -1e-4;
 		}
 		building.bendAmount = (float)(x / scale);
+
+
+
+        //ARCSIN(X/L) dla pendululum
+
+        double kd = md*wd*wd;
+        double AmpDamp = (f0 / kd) * (((md / m) * rn * rn) / denom);
+		double xd = Math.Abs(AmpDamp) * Math.Sin(wn * t + Math.PI);
+        tmd.transform.rotation = Quaternion.Euler(0, 0, (float)(Math.Asin(Math.Clamp(xd/l, -1.0, 1.0)) * 180/Math.PI));
+        Debug.Log(AmpDamp);
 
 	}
 }

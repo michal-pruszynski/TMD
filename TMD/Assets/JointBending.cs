@@ -18,6 +18,9 @@ public class JointBending : MonoBehaviour
     Mesh _mesh;
     Vector3[] _baseVertices;
 
+
+    public Vector3 tmdPoint = Vector3.zero;
+
     void OnEnable()
     {
         CreateMesh();
@@ -156,7 +159,14 @@ public class JointBending : MonoBehaviour
             double y = yCenter + normalizedX * halfWidth * normal.y;
 
             deformed[i] = new Vector3((float)x, (float)y, 0f);
-        }
+            if (i == 75) { 
+                tmdPoint = deformed[i];
+            }
+			if (i == 76)
+			{
+				tmdPoint = (tmdPoint+deformed[i])/2;
+			}
+		}
 
 
         _mesh.vertices = deformed;

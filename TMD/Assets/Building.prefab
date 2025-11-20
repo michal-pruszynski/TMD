@@ -103,3 +103,4 @@ MonoBehaviour:
   height: 10
   verticalSegments: 40
   bendAmount: 0
+  tmdPoint: {x: 0, y: 0, z: 0}
