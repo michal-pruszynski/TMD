@@ -79,8 +79,13 @@ public class SimulationLord : MonoBehaviour
         wd = Math.Sqrt(g / l);
         T = 0.085 * Math.Pow(h, 0.75);
         wn = (2*Math.PI)/ T;
+
+
         w0 = wn;// 2 * Math.PI * 0.3;//0.12 * (v / a);
 
+        //double St = 0.12;
+        //double B = a;
+        //w0 = 2 * Math.PI * St * v / B;
 
         double rd, rn, k, f0;
 
@@ -105,7 +110,7 @@ public class SimulationLord : MonoBehaviour
         wdValue.text = Math.Abs(wd).ToString("N3", spaceCulture)+"rad";
 
         double x = Math.Abs(Amplitude) * Math.Sin(wn * t);
-
+        
 		
         graph.AddSample((float)x);
 

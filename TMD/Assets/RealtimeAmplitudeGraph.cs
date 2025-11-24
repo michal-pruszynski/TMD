@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 
 [RequireComponent(typeof(RawImage))]
 public class RealtimeAmplitudeHistoryGraph : MonoBehaviour
@@ -13,6 +14,10 @@ public class RealtimeAmplitudeHistoryGraph : MonoBehaviour
     public Color backgroundColor = new Color(0f, 0f, 0f, 0.7f);
     public Color axisColor = new Color(0.4f, 0.4f, 0.4f, 1f);
     public Color lineColor = Color.green;
+
+    [Header("Value Readout (optional)")]
+    public TextMeshProUGUI currentXText; // shows time (x)
+    public TextMeshProUGUI currentYText; // shows amplitude (y)
 
     [Header("Sampling")]
     [Tooltip("Seconds between samples.")]
@@ -28,6 +33,8 @@ public class RealtimeAmplitudeHistoryGraph : MonoBehaviour
     private readonly List<float> _values = new List<float>();
     private float _sampleTimer;
 
+    private Color[] _pixels;
+
     void Awake()
     {
         _rawImage = GetComponent<RawImage>();
@@ -35,16 +42,16 @@ public class RealtimeAmplitudeHistoryGraph : MonoBehaviour
         _texture.wrapMode = TextureWrapMode.Clamp;
         _rawImage.texture = _texture;
 
+        _pixels = new Color[graphWidth * graphHeight];
         ClearTexture();
     }
 
     void ClearTexture()
     {
-        var pixels = new Color[graphWidth * graphHeight];
-        for (int i = 0; i < pixels.Length; i++)
-            pixels[i] = backgroundColor;
+        for (int i = 0; i < _pixels.Length; i++)
+            _pixels[i] = backgroundColor;
 
-        _texture.SetPixels(pixels);
+        _texture.SetPixels(_pixels);
         _texture.Apply();
     }
 
@@ -69,20 +76,32 @@ public class RealtimeAmplitudeHistoryGraph : MonoBehaviour
     /// </summary>
     public void AddSample(float value)
     {
-        _values.Add(Mathf.Clamp(value, -maxAmplitude, maxAmplitude));
+        float absValue = Mathf.Abs(value);
+        if (absValue > maxAmplitude)
+            maxAmplitude = Mathf.Lerp(maxAmplitude, absValue, 0.1f);
+
+        _values.Add(value);
+
+        int index = _values.Count - 1;
+        float time = index * sampleInterval;
+
+        if (currentXText != null)
+            currentXText.text = $"t = {time:F2} s";
+
+        if (currentYText != null)
+            currentYText.text = $"y = {value:F4}";
         Redraw();
     }
 
     void Redraw()
     {
-        var pixels = new Color[graphWidth * graphHeight];
-        for (int i = 0; i < pixels.Length; i++)
-            pixels[i] = backgroundColor;
+        for (int i = 0; i < _pixels.Length; i++)
+            _pixels[i] = backgroundColor;
 
-        // Draw zero axis in the middle
+        // Draw zero axis
         int midY = graphHeight / 2;
         for (int x = 0; x < graphWidth; x++)
-            pixels[midY * graphWidth + x] = axisColor;
+            _pixels[midY * graphWidth + x] = axisColor;
 
         if (_values.Count > 1)
         {
@@ -95,20 +114,22 @@ public class RealtimeAmplitudeHistoryGraph : MonoBehaviour
                 int x = Mathf.Clamp(Mathf.RoundToInt(t * (graphWidth - 1)), 0, graphWidth - 1);
                 int y = ValueToY(_values[i]);
 
-                DrawLine(pixels, lastX, lastY, x, y, lineColor);
+                DrawLine(_pixels, lastX, lastY, x, y, lineColor);
 
                 lastX = x;
                 lastY = y;
             }
         }
 
-        _texture.SetPixels(pixels);
+        _texture.SetPixels(_pixels);
         _texture.Apply();
     }
 
     int ValueToY(float value)
     {
-        // Map [-maxAmplitude, maxAmplitude]  [0, graphHeight-1]
+        if (maxAmplitude <= 0f)
+            maxAmplitude = 1f;
+
         float v = Mathf.InverseLerp(-maxAmplitude, maxAmplitude, value);
         int y = Mathf.RoundToInt(v * (graphHeight - 1));
         return Mathf.Clamp(y, 0, graphHeight - 1);
