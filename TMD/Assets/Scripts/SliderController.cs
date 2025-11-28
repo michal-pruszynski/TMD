@@ -49,4 +49,10 @@ public class SliderController : MonoBehaviour
 		sliderLabel.text = varSymbol;
 		sliderValueText.text = value.ToString() + unit;
 	}
+
+    public void forceSetValue(float x) {
+        slider.value = x;
+
+
+	}
 }

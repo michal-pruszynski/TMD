@@ -3,6 +3,7 @@ using System.Globalization;
 using TMPro;
 using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class SimulationLord : MonoBehaviour
 {
@@ -17,14 +18,15 @@ public class SimulationLord : MonoBehaviour
     public SliderController lenghtSlider;
     public SliderController massDamperSlider;
     public SliderController windVelocitySlider;
+    public SliderController resonanceVelocitySlider;
 
     //INPUT VARIABLES
-    double h, a, l, md, v;
+    double h, a, l, md, v, res;
 
     double t = 0;
 
     //MID VARIABLES
-    double mass;
+    double mass, wn;
    
 
 	//END VARIABLES
@@ -34,6 +36,7 @@ public class SimulationLord : MonoBehaviour
 	public TextMeshProUGUI ampValue;
 	public TextMeshProUGUI wnValue;
 	public TextMeshProUGUI wdValue;
+	public TextMeshProUGUI w0Value;
     public pendulum tmd;
 
 
@@ -60,19 +63,20 @@ public class SimulationLord : MonoBehaviour
         l = lenghtSlider.value;
 		md = massDamperSlider.value*1000;
         v = windVelocitySlider.value;
+        res = resonanceVelocitySlider.value;
 
 		building.width = (float)(a / scale);
 		building.height = (float)(h / scale);
 
 		//CALCULATE MASS
-		mass = a * a * h * 7500 * 0.05;
+		mass = a * a * h * 7500 * 0.07;
         massValue.text = (mass/1000).ToString("N0", spaceCulture) +"t";
 
         tmd.setLenghts((float)(l / scale), 1);
 
 
         //UBER EQUATION FOR AMPLITUDE
-        double w0, wn, wd, T, m, g;
+        double w0, wd, T, m, g;
         double Amplitude;
         m = mass/2;
         g = 9.81;
@@ -81,7 +85,7 @@ public class SimulationLord : MonoBehaviour
         wn = (2*Math.PI)/ T;
 
 
-        w0 = wn;// 2 * Math.PI * 0.3;//0.12 * (v / a);
+        w0 = wn*(res/100);// 2 * Math.PI * 0.3;//0.12 * (v / a);
 
         //double St = 0.12;
         //double B = a;
@@ -108,6 +112,7 @@ public class SimulationLord : MonoBehaviour
         ampValue.text = Math.Abs(Amplitude).ToString("N5", spaceCulture)+"m";
         wnValue.text = Math.Abs(wn).ToString("N3", spaceCulture)+"rad";
         wdValue.text = Math.Abs(wd).ToString("N3", spaceCulture)+"rad";
+        w0Value.text = Math.Abs(w0).ToString("N3", spaceCulture)+"rad";
 
         double x = Math.Abs(Amplitude) * Math.Sin(wn * t);
         
@@ -129,10 +134,23 @@ public class SimulationLord : MonoBehaviour
         //ARCSIN(X/L) dla pendululum
 
         double kd = md*wd*wd;
+
+
+
         double AmpDamp = (f0 / kd) * (((md / m) * rn * rn) / denom);
 		double xd = Math.Abs(AmpDamp) * Math.Sin(wn * t + Math.PI);
         tmd.transform.rotation = Quaternion.Euler(0, 0, (float)(Math.Asin(Math.Clamp(xd/l, -1.0, 1.0)) * 180/Math.PI));
-        Debug.Log(AmpDamp);
+        Debug.Log(1 - rd*rd + (md / m));
+
+	}
+
+	public void setLtoResonate()
+	{
+
+        //QUEST: set l so that wd = wn
+        //lenghtSlider.forceSetValue((float)(9.81 / (wn * wn)));
+        lenghtSlider.forceSetValue((float)(9.81 / (wn * wn)));
+        //1 - (wd / w0) ^ 2 + md(md / m);
 
 	}
 }
