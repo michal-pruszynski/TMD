@@ -105,4 +105,6 @@ MonoBehaviour:
   bendAmount: 0
   floorHeightMeters: 3
   metersPerWorldUnit: 10
+  topBlankFraction: 0.1
+  buildingMaterial: {fileID: 2100000, guid: 514d38a4de5696549878913d78da8796, type: 2}
   tmdPoint: {x: 0, y: 0, z: 0}

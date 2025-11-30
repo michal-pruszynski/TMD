@@ -21,6 +21,12 @@ public class JointBending : MonoBehaviour
 
     public float metersPerWorldUnit = 10f;
 
+    [Header("Offset")]
+    [Range(0f, 0.9f)]
+    public float topBlankFraction = 0.1f;
+
+    public Material buildingMaterial;
+
     Mesh _mesh;
     Vector3[] _baseVertices;
     Vector2[] _baseUVs;
@@ -79,11 +85,9 @@ public class JointBending : MonoBehaviour
 
             int baseIndex = i * vertsPerColumn;
 
-            // Straight, unbent geometry
             vertices[baseIndex + 0] = new Vector3((float)-halfWidth, (float)y, 0f);
             vertices[baseIndex + 1] = new Vector3((float)+halfWidth, (float)y, 0f);
 
-            // UVs: x across width, y = t * floors -> more height = more tiled floors
             float v = (float)(t * floors);
             uvs[baseIndex + 0] = new Vector2(0f, v);
             uvs[baseIndex + 1] = new Vector2(1f, v);
@@ -115,8 +119,15 @@ public class JointBending : MonoBehaviour
         _mesh.RecalculateNormals();
         _mesh.RecalculateBounds();
 
+        if (buildingMaterial != null)
+        {
+            buildingMaterial.SetFloat("_Floors", floors);
+            buildingMaterial.SetFloat("_TopBlankFraction", topBlankFraction);
+        }
+
         _baseVertices = _mesh.vertices;
         _baseUVs = _mesh.uv;
+
     }
 
     void ApplyBend()
