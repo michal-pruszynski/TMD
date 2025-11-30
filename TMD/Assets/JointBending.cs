@@ -15,9 +15,15 @@ public class JointBending : MonoBehaviour
     [Tooltip("How far (in world units) the TOP of the building is pushed sideways.")]
     public double bendAmount = 0;
 
+    [Header("Visual Floors")]
+    [Tooltip("Real-world height (meters) of one floor.")]
+    public float floorHeightMeters = 3f;
+
+    public float metersPerWorldUnit = 10f;
+
     Mesh _mesh;
     Vector3[] _baseVertices;
-
+    Vector2[] _baseUVs;
 
     public Vector3 tmdPoint = Vector3.zero;
 
@@ -56,6 +62,11 @@ public class JointBending : MonoBehaviour
         int[] triangles = new int[verticalSegments * 6];
 
         double halfWidth = width * 0.5d;
+        float heightMeters = (float)(height * metersPerWorldUnit);
+
+        float floors = (floorHeightMeters > 0f)
+            ? heightMeters / floorHeightMeters
+            : 1f;
 
         for (int i = 0; i <= verticalSegments; i++)
         {
@@ -67,11 +78,15 @@ public class JointBending : MonoBehaviour
             double xRight = halfWidth;
 
             int baseIndex = i * vertsPerColumn;
-            vertices[baseIndex + 0] = new Vector3((float)xLeft, (float)y, 0);  // left
-            vertices[baseIndex + 1] = new Vector3((float)xRight, (float)y, 0); // right
 
-            uvs[baseIndex + 0] = new Vector2(0f, (float)t);
-            uvs[baseIndex + 1] = new Vector2(1f, (float)t);
+            // Straight, unbent geometry
+            vertices[baseIndex + 0] = new Vector3((float)-halfWidth, (float)y, 0f);
+            vertices[baseIndex + 1] = new Vector3((float)+halfWidth, (float)y, 0f);
+
+            // UVs: x across width, y = t * floors -> more height = more tiled floors
+            float v = (float)(t * floors);
+            uvs[baseIndex + 0] = new Vector2(0f, v);
+            uvs[baseIndex + 1] = new Vector2(1f, v);
         }
 
         int ti = 0;
@@ -101,6 +116,7 @@ public class JointBending : MonoBehaviour
         _mesh.RecalculateBounds();
 
         _baseVertices = _mesh.vertices;
+        _baseUVs = _mesh.uv;
     }
 
     void ApplyBend()
@@ -120,6 +136,7 @@ public class JointBending : MonoBehaviour
                 deformed[i] = _baseVertices[i];
 
             _mesh.vertices = deformed;
+            _mesh.uv = _baseUVs;
             _mesh.RecalculateBounds();
             return;
         }
@@ -168,8 +185,8 @@ public class JointBending : MonoBehaviour
 			}
 		}
 
-
         _mesh.vertices = deformed;
+        _mesh.uv = _baseUVs;
         _mesh.RecalculateBounds();
     }
 

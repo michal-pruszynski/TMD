@@ -65,7 +65,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 7af4b1a4d4c282d4d901f1a5f3140007, type: 2}
+  - {fileID: 2100000, guid: 514d38a4de5696549878913d78da8796, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -103,4 +103,6 @@ MonoBehaviour:
   height: 10
   verticalSegments: 40
   bendAmount: 0
+  floorHeightMeters: 3
+  metersPerWorldUnit: 10
   tmdPoint: {x: 0, y: 0, z: 0}
