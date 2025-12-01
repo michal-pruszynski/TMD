@@ -211,8 +211,8 @@ public class SimulationLord : MonoBehaviour
 		u = (F0 / k) * H1 * cd1;
 		ud = (F0 / k) * H3 * cd3;
 
-		x = Math.Abs(u) * Math.Sin(w0 * t);
-		xd = Math.Abs(ud) * Math.Sin(w0 * t);
+		x = Math.Abs(u) * Math.Sin(wn * t);
+		xd = Math.Abs(ud) * Math.Sin(wn * t);
 
 
 		///Debug.Log(Amplitude);
