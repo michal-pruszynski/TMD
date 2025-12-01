@@ -54,7 +54,7 @@ public class SimulationLord : MonoBehaviour
 	}
 
     // Update is called once per frame
-    void Update()
+    void oldUpdate()
     {
         t += Time.deltaTime;
         //GET INPUT VARIABLES
@@ -142,6 +142,107 @@ public class SimulationLord : MonoBehaviour
         tmd.transform.rotation = Quaternion.Euler(0, 0, (float)(Math.Asin(Math.Clamp(xd/l, -1.0, 1.0)) * 180/Math.PI));
         Debug.Log(1 - rd*rd + (md / m));
 
+	}
+
+
+    //NEW UPDATE
+    void Update() {
+		t += Time.deltaTime; //delta time
+
+
+
+		//GET INPUT VARIABLES
+		h = heightSlider.value;
+		a = widthSlider.value;
+		l = lenghtSlider.value;
+		md = massDamperSlider.value * 1000;
+		v = windVelocitySlider.value;
+		res = resonanceVelocitySlider.value;
+		double d = 0.1;
+
+		building.width = (float)(a / scale);
+		building.height = (float)(h / scale);
+		tmd.setLenghts((float)(l / scale), 1);
+
+		//CALCULATE MASS
+		mass = a * a * h * 7500 * 0.07;
+		massValue.text = (mass / 1000).ToString("N0", spaceCulture) + "t";
+
+
+
+
+		//Dane wynikajace
+		double T, /*wn,*/ wd, F0, w0, p, f, mr, k;
+		T = 0.075 * Math.Pow(h, 0.75);
+		wn = (2 * Math.PI) / T;
+		wd = Math.Sqrt(9.81 / l);
+		F0 = 1.25 * ((v * v) / 2) * 1.3 * a * h;
+		w0 = (res/100) * wn;
+		p = w0 / wn;
+		f = wd / wn;
+		mr = md / mass;
+		k = mass * wn * wn;
+
+		//Funkcje przejœciowe
+		double B,Q,R,M,N;
+
+		B = 2 * d * p * f;
+		Q = 1 - (p * p);
+		R = 1 + mr;
+		M = (f * f) - (p * p);
+		N = mr * p * p * f * f;
+
+		//Funkcje Pomocnicze
+
+		double td3, ta1, cd1, cd3, D, H1, H3;
+
+		td3 = (B * (1 - (p * p * R))) / (Q * M - N);
+		ta1 = B / M;
+		cd1 = (1 + ta1 * td3) / (Math.Sqrt((1 + (ta1 * ta1)) * (1 + (td3 * td3))));
+		cd3 = Q * M - N;
+		D = Math.Sqrt(cd3 * cd3 + B * (1 - (p * p * R)) * (1 - (p * p * R)));
+		H1 = Math.Sqrt(M * M + B * B) / D;
+		H3 = (p * p) / D;
+
+
+		//Wyniki
+		double u, ud, x, xd;
+
+		u = (F0 / k) * H1 * cd1;
+		ud = (F0 / k) * H3 * cd3;
+
+		x = Math.Abs(u) * Math.Sin(w0 * t);
+		xd = Math.Abs(ud) * Math.Sin(w0 * t);
+
+
+		///Debug.Log(Amplitude);
+		ampValue.text = Math.Abs(u).ToString("N5", spaceCulture) + "m";
+		wnValue.text = Math.Abs(wn).ToString("N3", spaceCulture) + "rad";
+		wdValue.text = Math.Abs(wd).ToString("N3", spaceCulture) + "rad";
+		w0Value.text = Math.Abs(w0).ToString("N3", spaceCulture) + "rad";
+
+
+
+		graph.AddSample((float)x);
+
+
+		if (x < 1e-4 && x > 0)
+		{
+			x = 1e-4;
+		}
+		if (x > -1e-4 && x < 0)
+		{
+			x = -1e-4;
+		}
+		building.bendAmount = (float)(x / scale);
+
+
+
+		//ARCSIN(X/L) dla pendululum
+
+
+		tmd.transform.rotation = Quaternion.Euler(0, 0, (float)(Math.Asin(Math.Clamp(xd / l, -1.0, 1.0)) * 180 / Math.PI));
+		Debug.Log(ud);
 	}
 
 	public void setLtoResonate()
