@@ -8,8 +8,9 @@ public class JointBending : MonoBehaviour
     [Header("Base Shape")]
     public double width = 1;
     public double height = 5;
-    [Range(1, 40)]
-    public int verticalSegments = 10; // more segments = smoother bend
+
+    [Range(1, 400)]
+    public int verticalSegments = 100;
 
     [Header("Bend Control")]
     [Tooltip("How far (in world units) the TOP of the building is pushed sideways.")]
@@ -25,7 +26,15 @@ public class JointBending : MonoBehaviour
     [Range(0f, 0.9f)]
     public float topBlankFraction = 0.1f;
 
+    [Header("Bending Safety Cutoff")]
+    public float bendCutoff = 1000f;
+
+    bool bendingPaused = false;
+
     public Material buildingMaterial;
+
+    double _lastWidth;
+    double _lastHeight;
 
     Mesh _mesh;
     Vector3[] _baseVertices;
@@ -35,6 +44,9 @@ public class JointBending : MonoBehaviour
 
     void OnEnable()
     {
+        _lastWidth = width;
+        _lastHeight = height;
+
         CreateMesh();
         ApplyBend();
     }
@@ -48,7 +60,16 @@ public class JointBending : MonoBehaviour
 
     void Update()
     {
-        
+
+        if (!Mathf.Approximately((float)_lastWidth, (float)width) ||
+        !Mathf.Approximately((float)_lastHeight, (float)height))
+        {
+            _lastWidth = width;
+            _lastHeight = height;
+
+            CreateMesh();   // rebuild vertices/UVs for new height/width
+        }
+        UpdateMaterialFloors();
         ApplyBend();
     }
 
@@ -119,11 +140,7 @@ public class JointBending : MonoBehaviour
         _mesh.RecalculateNormals();
         _mesh.RecalculateBounds();
 
-        if (buildingMaterial != null)
-        {
-            buildingMaterial.SetFloat("_Floors", floors);
-            buildingMaterial.SetFloat("_TopBlankFraction", topBlankFraction);
-        }
+        UpdateMaterialFloors();
 
         _baseVertices = _mesh.vertices;
         _baseUVs = _mesh.uv;
@@ -139,6 +156,11 @@ public class JointBending : MonoBehaviour
 
         double dir = Mathf.Sign((float)bendAmount);
         double target = Mathf.Abs((float)bendAmount);
+
+        if (bendCutoff > 0f && target > bendCutoff)
+        {
+            target = bendCutoff;
+        }
 
         // If no bend: keep original
         if (target < 0.00001f)
@@ -226,6 +248,19 @@ public class JointBending : MonoBehaviour
         return Mathf.Max((float)R, (float)height * 0.25f);
     }
 
-   
+    void UpdateMaterialFloors()
+    {
+        if (buildingMaterial == null)
+            return;
+
+        float heightMeters = (float)(height * metersPerWorldUnit);
+        float floors = (floorHeightMeters > 0f)
+            ? heightMeters / floorHeightMeters
+            : 1f;
+
+        buildingMaterial.SetFloat("_Floors", floors);
+        buildingMaterial.SetFloat("_TopBlankFraction", topBlankFraction);
+    }
+
 
 }

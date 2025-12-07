@@ -1,7 +1,9 @@
 using System.Collections.Generic;
-using UnityEngine;
-using UnityEngine.UI;
 using TMPro;
+using UnityEngine;
+using UnityEngine.Experimental.GlobalIllumination;
+using UnityEngine.Rendering;
+using UnityEngine.UI;
 
 [RequireComponent(typeof(RawImage))]
 public class RealtimeAmplitudeHistoryGraph : MonoBehaviour
@@ -13,7 +15,8 @@ public class RealtimeAmplitudeHistoryGraph : MonoBehaviour
     [Header("Appearance")]
     public Color backgroundColor = new Color(0f, 0f, 0f, 0.7f);
     public Color axisColor = new Color(0.4f, 0.4f, 0.4f, 1f);
-    public Color lineColor = Color.green;
+    public Color lineColor = Color.red;
+    public Color lineColorNoTmd = Color.blue;
 
     [Header("Value Readout (optional)")]
     public TextMeshProUGUI currentXText; // shows time (x)
@@ -27,13 +30,20 @@ public class RealtimeAmplitudeHistoryGraph : MonoBehaviour
     [Tooltip("Expected max absolute amplitude. For -1..1 use 1.")]
     public float maxAmplitude = 1f; // we’re targeting [-1, 1]
 
+    [Header("History")]
+    [Tooltip("Maximum samples to keep (per series).")]
+    public int maxSamples = 400;
+
     private RawImage _rawImage;
     private Texture2D _texture;
 
     private readonly List<float> _values = new List<float>();
+    private readonly List<float> _valuesNoTmd = new List<float>();
     private float _sampleTimer;
 
     private Color[] _pixels;
+
+    bool needsRedraw = false;
 
     void Awake()
     {
@@ -57,71 +67,61 @@ public class RealtimeAmplitudeHistoryGraph : MonoBehaviour
 
     void Update()
     {
-        // DEMO INPUT: clean sine between -1 and 1
-        _sampleTimer += Time.deltaTime;
-        if (_sampleTimer >= sampleInterval)
+        if (needsRedraw)
         {
-            _sampleTimer -= sampleInterval;
-
-            float t = Time.time;          // seconds since start
-            float value = Mathf.Sin(t);   // in [-1, 1]
-
-            //AddSample(value);
+            Redraw();
+            needsRedraw = false;
         }
     }
 
-    /// <summary>
-    /// Call this from your simulation instead of the demo sine.
-    /// Value should be in [-maxAmplitude, maxAmplitude].
-    /// </summary>
+
     public void AddSample(float value)
     {
-        float absValue = Mathf.Abs(value);
-        if (absValue > maxAmplitude)
-            maxAmplitude = Mathf.Lerp(maxAmplitude, absValue, 0.1f);
+        float abs = Mathf.Abs(value);
+        if (abs > maxAmplitude)
+            maxAmplitude = abs;
+
+        // keep only newest maxSamples
+        if (_values.Count >= maxSamples)
+            _values.RemoveAt(0);
 
         _values.Add(value);
+        needsRedraw = true;
+    }
 
-        int index = _values.Count - 1;
-        float time = index * sampleInterval;
+    public void AddSampleNoTmd(float value)
+    {
+        float abs = Mathf.Abs(value);
+        if (abs > maxAmplitude)
+            maxAmplitude = abs;
 
-        if (currentXText != null)
-            currentXText.text = $"t = {time:F2} s";
+        if (_valuesNoTmd.Count >= maxSamples)
+            _valuesNoTmd.RemoveAt(0);
 
-        if (currentYText != null)
-            currentYText.text = $"y = {value:F4}";
-        Redraw();
+        _valuesNoTmd.Add(value);
+        needsRedraw = true;
     }
 
     void Redraw()
     {
-        for (int i = 0; i < _pixels.Length; i++)
-            _pixels[i] = backgroundColor;
+        Color[] pixels = _pixels;
+        for (int i = 0; i < pixels.Length; i++)
+            pixels[i] = backgroundColor;
 
-        // Draw zero axis
+        // zero axis
         int midY = graphHeight / 2;
         for (int x = 0; x < graphWidth; x++)
-            _pixels[midY * graphWidth + x] = axisColor;
+            pixels[midY * graphWidth + x] = axisColor;
 
+        // 1) TMD series (blue)
         if (_values.Count > 1)
-        {
-            int lastX = 0;
-            int lastY = ValueToY(_values[0]);
+            DrawSeries(_values, lineColor, pixels);
 
-            for (int i = 1; i < _values.Count; i++)
-            {
-                float t = (float)i / (_values.Count - 1);
-                int x = Mathf.Clamp(Mathf.RoundToInt(t * (graphWidth - 1)), 0, graphWidth - 1);
-                int y = ValueToY(_values[i]);
+        // 2) no-TMD series (red), drawn on top if present
+        if (_valuesNoTmd.Count > 1)
+            DrawSeries(_valuesNoTmd, lineColorNoTmd, pixels);
 
-                DrawLine(_pixels, lastX, lastY, x, y, lineColor);
-
-                lastX = x;
-                lastY = y;
-            }
-        }
-
-        _texture.SetPixels(_pixels);
+        _texture.SetPixels(pixels);
         _texture.Apply();
     }
 
@@ -134,7 +134,7 @@ public class RealtimeAmplitudeHistoryGraph : MonoBehaviour
         int y = Mathf.RoundToInt(v * (graphHeight - 1));
         return Mathf.Clamp(y, 0, graphHeight - 1);
     }
-    
+
     void DrawLine(Color[] pixels, int x0, int y0, int x1, int y1, Color col)
     {
         int w = graphWidth;
@@ -164,6 +164,24 @@ public class RealtimeAmplitudeHistoryGraph : MonoBehaviour
                 err += dx;
                 y0 += sy;
             }
+        }
+    }
+    void DrawSeries(List<float> values, Color col, Color[] pixels)
+    {
+        int count = values.Count;
+        int lastX = 0;
+        int lastY = ValueToY(values[0]);
+
+        for (int i = 1; i < count; i++)
+        {
+            float t = (float)i / (count - 1);  // 0..1 along X
+            int x = Mathf.Clamp(Mathf.RoundToInt(t * (graphWidth - 1)), 0, graphWidth - 1);
+            int y = ValueToY(values[i]);
+
+            DrawLine(pixels, lastX, lastY, x, y, col);
+
+            lastX = x;
+            lastY = y;
         }
     }
 }
