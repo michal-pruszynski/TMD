@@ -77,29 +77,24 @@ public class RealtimeAmplitudeHistoryGraph : MonoBehaviour
 
     public void AddSample(float value)
     {
-        float abs = Mathf.Abs(value);
-        if (abs > maxAmplitude)
-            maxAmplitude = abs;
-
-        // keep only newest maxSamples
         if (_values.Count >= maxSamples)
             _values.RemoveAt(0);
 
         _values.Add(value);
-        needsRedraw = true;
+
+        RecalculateMaxAmplitude();
+        Redraw();
     }
 
     public void AddSampleNoTmd(float value)
     {
-        float abs = Mathf.Abs(value);
-        if (abs > maxAmplitude)
-            maxAmplitude = abs;
-
         if (_valuesNoTmd.Count >= maxSamples)
             _valuesNoTmd.RemoveAt(0);
 
         _valuesNoTmd.Add(value);
-        needsRedraw = true;
+
+        RecalculateMaxAmplitude();
+        Redraw();
     }
 
     void Redraw()
@@ -184,4 +179,31 @@ public class RealtimeAmplitudeHistoryGraph : MonoBehaviour
             lastY = y;
         }
     }
+
+    void RecalculateMaxAmplitude()
+    {
+        float maxAbs = 0f;
+
+        // TMD series
+        for (int i = 0; i < _values.Count; i++)
+        {
+            float v = Mathf.Abs(_values[i]);
+            if (v > maxAbs) maxAbs = v;
+        }
+
+        // no-TMD series (if you have it)
+        for (int i = 0; i < _valuesNoTmd.Count; i++)
+        {
+            float v = Mathf.Abs(_valuesNoTmd[i]);
+            if (v > maxAbs) maxAbs = v;
+        }
+
+        // fallback so graph doesn't break if everything is zero
+        if (maxAbs <= 0f)
+            maxAbs = 1f;
+
+        maxAmplitude = maxAbs;
+    }
+
+
 }
