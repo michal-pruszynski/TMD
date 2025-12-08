@@ -19,8 +19,8 @@ public class RealtimeAmplitudeHistoryGraph : MonoBehaviour
     public Color lineColorNoTmd = Color.blue;
 
     [Header("Value Readout (optional)")]
-    public TextMeshProUGUI currentXText; // shows time (x)
-    public TextMeshProUGUI currentYText; // shows amplitude (y)
+    public TextMeshProUGUI currentYText;
+    public TextMeshProUGUI currentYNoText;
 
     [Header("Sampling")]
     [Tooltip("Seconds between samples.")]
@@ -84,6 +84,8 @@ public class RealtimeAmplitudeHistoryGraph : MonoBehaviour
 
         RecalculateMaxAmplitude();
         Redraw();
+        if (currentYText != null)
+            currentYText.text = value.ToString("F4");
     }
 
     public void AddSampleNoTmd(float value)
@@ -95,6 +97,10 @@ public class RealtimeAmplitudeHistoryGraph : MonoBehaviour
 
         RecalculateMaxAmplitude();
         Redraw();
+
+        // ----- NEW -----
+        if (currentYNoText != null)
+            currentYNoText.text = value.ToString("F4");
     }
 
     void Redraw()

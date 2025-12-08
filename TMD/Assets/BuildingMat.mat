@@ -110,7 +110,7 @@ Material:
     - _DstBlendAlpha: 0
     - _EnableExternalAlpha: 0
     - _EnvironmentReflections: 1
-    - _Floors: 33.333332
+    - _Floors: 30.075188
     - _GlossMapScale: 0
     - _Glossiness: 0
     - _GlossyReflections: 0
@@ -125,7 +125,7 @@ Material:
     - _SrcBlend: 1
     - _SrcBlendAlpha: 1
     - _Surface: 0
-    - _TopBlankFraction: 0.1
+    - _TopBlankFraction: 0.25
     - _WorkflowMode: 1
     - _ZWrite: 1
     m_Colors:
