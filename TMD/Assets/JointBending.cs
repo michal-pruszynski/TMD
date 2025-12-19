@@ -27,7 +27,7 @@ public class JointBending : MonoBehaviour
     public float topBlankFraction = 0.1f;
 
     [Header("Bending Safety Cutoff")]
-    public float bendCutoff = 1000f;
+    public double bendCutoff = 1000f;
 
     bool bendingPaused = false;
 
@@ -159,6 +159,7 @@ public class JointBending : MonoBehaviour
 
         if (bendCutoff > 0f && target > bendCutoff)
         {
+            bendCutoff = 0.6 * height;
             target = bendCutoff;
         }
 

@@ -225,10 +225,9 @@ public class SimulationLord : MonoBehaviour
 
 
         //Bez TMD
-        double lMin = 1.0;           // minimal pendulum length
-        double mdMin = 10.0 * 1000.0; // minimal TMD mass (10 tons)
+        double lMin = 1.0;
+        double mdMin = 10.0 * 1000.0;
 
-        // recompute only the parts that depend on l and md
         double wdMin = Math.Sqrt(9.81 / lMin); // new wd
         double fMin = wdMin / wn;             // new f
         double mrMin = mdMin / mass;           // new mr
@@ -239,7 +238,6 @@ public class SimulationLord : MonoBehaviour
         double Mmin = (fMin * fMin) - (p * p);
         double Nmin = mrMin * p * p * fMin * fMin;
 
-        // helper functions for the minimal-TMD system
         double td3Min = (Bmin * (1 - (p * p * Rmin))) / (Qmin * Mmin - Nmin);
         double ta1Min = Bmin / Mmin;
         double cd1Min = (1 + ta1Min * td3Min) /
@@ -249,9 +247,8 @@ public class SimulationLord : MonoBehaviour
                                   Bmin * (1 - (p * p * Rmin)) * (1 - (p * p * Rmin)));
         double H1Min = Math.Sqrt(Mmin * Mmin + Bmin * Bmin) / Dmin;
 
-        // we don't actually need H3Min/udMin for the ghost
         double uMin = (F0 / k) * H1Min * cd1Min;
-        double xMin = Math.Abs(uMin) * Math.Sin(wn * t); // “no TMD” / minimal TMD displacement
+        double xMin = Math.Abs(uMin) * Math.Sin(wn * t);
 
         //Wyniki
         double u, ud, x, xd;
